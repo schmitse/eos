@@ -24,7 +24,7 @@
 #include <memory>
 #include <string>
 #ifdef __clang__
-#  include <experimental/source_location>
+#  include <source_location>
 #else
 #  include <source_location>
 #endif
@@ -32,7 +32,7 @@
 namespace eos
 {
 #ifdef __clang__
-    using source_location = std::experimental::source_location;
+    using source_location = std::source_location;
 #else
     using source_location = std::source_location;
 #endif

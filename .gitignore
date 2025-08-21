@@ -55,3 +55,6 @@ eos-*.t*
 
 # Jupyter/iPython
 .ipynb_checkpoints
+
+# my local stuff
+scripts/predictions-data/*

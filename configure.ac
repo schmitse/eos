@@ -90,13 +90,13 @@ save_CXXFLAGS=$CXXFLAGS
 CXXFLAGS="$CXXFLAGS -std=c++20"
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 	#ifdef __clang__
-	#  include <experimental/source_location>
+	#  include <source_location>
 	#else
 	#  include <source_location>
 	#endif
 
 	#ifdef __clang__
-		using source_location = std::experimental::source_location;
+		using source_location = std::source_location;
 	#else
 		using source_location = std::source_location;
 	#endif
@@ -326,6 +326,12 @@ if test "x$enable_python" == xyes ; then
 	PYTHON_LDFLAGS="$BOOST_PYTHON_LDFLAGS"
 	PYTHON_LIBS="$BOOST_PYTHON_LIBS"
 	else
+	PYTHON_LDFLAGS="$PYTHON_LDFLAGS -L/opt/homebrew/lib -L/opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/lib"
+	PYTHON_CXXFLAGS="$PYTHON_CXXFLAGS -I/opt/homebrew/include -I/opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/include/python3.13"
+	CXXFLAGS=$PYTHON_CXXFLAGS
+	LDFLAGS=$PYTHON_LDFLAGS
+	LIBS=$PYTHON_LIBS_CONFTEST
+
 	AC_CHECK_LIB([boost_python$BOOST_PYTHON_SUFFIX], main,
 	        [],
 	        [AC_MSG_ERROR([you do seem to be lacking 'libboost_python'.])]
