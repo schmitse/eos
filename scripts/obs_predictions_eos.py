@@ -125,11 +125,12 @@ def main() -> None:
         insert_parameters(_file, constraint_name=_name)
     
     EOS_BASE_DIRECTORY = './predictions-data/'
-    posterior_name = 'BsToPhi-Posterior'
+    posterior_names = ['BsToPhi-Posterior', 'BsToPhi-Posterior-rc9m1', 'BsToPhi-Posterior-ic9m1']
     observable_names = ['BsToPhi-Norm', 'BsToPhi-Si', 'BsToPhi-Ai', 'BsToPhi-Ki', 'BsToPhi-Wi', 'BsToPhi-Hi', 'BsToPhi-Zi']
-    eos.tasks.sample_prior(analysis_file, posterior_name, base_directory=EOS_BASE_DIRECTORY, N=100, seed=42)
-    for observable_name in observable_names:
-        eos.tasks.predict_observables(analysis_file, posterior_name, observable_name, base_directory=EOS_BASE_DIRECTORY)
+    for posterior_name in posterior_names:
+        eos.tasks.sample_prior(analysis_file, posterior_name, base_directory=EOS_BASE_DIRECTORY, N=100, seed=42)
+        for observable_name in observable_names:
+            eos.tasks.predict_observables(analysis_file, posterior_name, observable_name, base_directory=EOS_BASE_DIRECTORY)
     return None
 
 

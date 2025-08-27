@@ -58,3 +58,4 @@ eos-*.t*
 
 # my local stuff
 scripts/predictions-data/*
+scripts/plots/*
