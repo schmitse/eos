@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 
 def load_eos(posterior_name: str) -> dict[str, NDArray | dict[tuple[float], tuple[float]]]:
     result = {}
-    observable_groups = [f'BsToPhi-{obs}i' for obs in ['K', 'S', 'W', 'A', 'H', 'Z']] + ['BsToPhi-Norm']
+    observable_groups = [f'BsToPhi-{obs}i' for obs in ['K', 'S', 'W', 'A', 'H', 'Z']] + ['BsToPhi-Norm'] + ['BsToPhi-Opt']
     path = os.path.join('predictions-data/', posterior_name)
     for group in observable_groups:
         yaml_name = os.path.join(path, f'pred-{group}', 'description.yaml')
@@ -81,13 +81,17 @@ def main() -> None:
             continue
         fig, ax = plt.subplots()
         for scenario in colors:
-            ax.plot(results[scenario]['qsq_array'], results[scenario][obs], label=labels[scenario], color=colors[scenario], linestyle=linestyles[scenario])
-            ax.fill_between(results[scenario]['qsq_array'], results[scenario][obs]-results[scenario][f's_{obs}'], 
-                            results[scenario][obs]+results[scenario][f's_{obs}'], 
-                            color=colors[scenario], alpha=0.25, linestyle=linestyles[scenario])
-            x, xerr, y, yerr = read_eos_obs(results[scenario][f'<{obs}>'])
-            norm = np.ones_like(y) if obs != 'Gamma' else xerr * 2
-            ax.errorbar(x, y/norm, xerr=xerr, yerr=yerr/norm, fmt=markers[scenario], color=colors[scenario], alpha=0.75)
+            try:
+                ax.plot(results[scenario]['qsq_array'], results[scenario][obs], label=labels[scenario], color=colors[scenario], linestyle=linestyles[scenario])
+                ax.fill_between(results[scenario]['qsq_array'], results[scenario][obs]-results[scenario][f's_{obs}'], 
+                                results[scenario][obs]+results[scenario][f's_{obs}'], 
+                                color=colors[scenario], alpha=0.25, linestyle=linestyles[scenario])
+                x, xerr, y, yerr = read_eos_obs(results[scenario][f'<{obs}>'])
+                norm = np.ones_like(y) if obs != 'Gamma' else xerr * 2
+                ax.errorbar(x, y/norm, xerr=xerr, yerr=yerr/norm, fmt=markers[scenario], color=colors[scenario], alpha=0.75)
+            except Exception as err:
+                print(f'Error plotting {obs}: {err}')
+                continue
         ax.legend()
         ax.set_xlabel(r'$q^2$ [GeV$^2/c^4$]')
         ax.set_ylabel('$'+ obs[0] + '_{' + obs[1:] + '}$')
