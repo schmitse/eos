@@ -1,0 +1,312 @@
+priors:
+  - name: Nuisance-Parameters
+    descriptions:
+        - { parameter: 'CKM::abs(V_ts)', min: 0.0, max: 1.0, type: 'gaussian',central: 0.04110  , sigma: 0.00083 ,}
+        - { parameter: 'CKM::abs(V_tb)', min: 0.0, max: 1.0, type: 'gaussian',central: 0.999118 , sigma: 0.000036 ,}
+        - { parameter: 'CKM::abs(V_ub)', min: 0.0, max: 1.0, type: 'gaussian',central: 0.00369 , sigma: 0.00011,}
+        - { parameter: 'CKM::abs(V_cb)', min: 0.0, max: 1.0, type: 'gaussian',central: 0.0418, sigma: 0.00085,}
+        - { parameter: 'CKM::abs(V_us)', min: 0.0, max: 1.0, type: 'gaussian',central: 0.22500 , sigma: 0.00067,} # add wolfenstein? 
+        - { parameter: 'CKM::abs(V_cs)', min: 0.0, max: 1.0, type: 'gaussian',central: 0.97349 , sigma: 0.00016,} # will not be used with WET. 
+        # - { parameter: 'QCD::alpha_s(MZ)', min: 0.1144, max: 0.1224, type: 'gaussian',central: 0.1184, sigma: 0.0007} # méril said no :D
+        # - { parameter: 'B->K^*::f_phi_par', min: 0.192, max: 0.290, type: 'gaussian',central: 0.233, sigma: 0.005}
+        # - { parameter: 'B_s::1/lambda_B_p', min: 0.4522, max: 3.8956, type: 'gaussian',central: 2.0, sigma: 0.5739}
+        # - { parameter: 'decay-constant::B_s', min: 0.1255, max: 0.2855, type: 'gaussian',central: 0.2307, sigma: 0.0016}
+        # - { parameter: 'mass::s(2GeV)', min: 0.07, max: 0.120, type: 'gaussian',central: 0.0935, sigma: 0.0008}
+        # - { parameter: 'mass::b(MSbar)', min: 4.03, max: 4.32, type: 'gaussian',central: 4.183, sigma: 0.007}
+        # - { parameter: 'mass::phi', min: 1.019, max: 1.020, type: 'gaussian',central: 1.019461 , sigma: 0.0002}
+        # - { parameter: 'mass::B_s^*', min: 5.4, max: 5.45, type: 'gaussian',central: 5.4154, sigma: 0.00021}
+        # - { parameter: 'life_time::B_s', min: 1.484e-12 , max: 1.554e-12 , type: 'gaussian',central: 1.516e-12, sigma: 7.0e-15}
+        
+  - name: BToKst-Nonlocal
+    descriptions: 
+        - {constraint: B->K^*::BToKst-Nonlocal-FFs} 
+  - name: BToKst-Local
+    descriptions: 
+        - {constraint: B->K^*::BToKst-Local-FFs}
+  - name: BToKst-hatH
+    descriptions: 
+        - {constraint: B->K^*::BToKst-hatH}
+
+
+likelihoods: 
+  - name: Some-Constraint-For-Nuisances  # they are actually missing still but prior should be good already(?)
+    constraints: 
+    - B->K^*::BToKst-Local-FFs
+    # - B->K^*::BsToPhi-hatH
+    # - B->K^*::FormFactors[parametric,LCSRLattice]@GvDV:2020A
+
+posteriors:
+  - name: BToKst-Posterior
+    global_options:
+      form-factors: BSZ2015
+      tag: GvDV2020
+      nonlocal-formfactor: GRvDV2022order5
+      psi: J/psi
+      model: WET
+    prior:
+      - Nuisance-Parameters
+      # - BsToPhi-Nonlocal
+      - BToKst-Local
+      # - BsToPhi-hatH
+    likelihood:
+      - Some-Constraint-For-Nuisances
+  - name: BToKst-Posterior-rc9m1
+    global_options:
+      form-factors: BSZ2015
+      tag: GvDV2020
+      nonlocal-formfactor: GRvDV2022order5
+      psi: J/psi
+      model: WET
+    fixed_parameters:
+      b->smumu::Re{c9}: 3.27342842
+    prior:
+      - Nuisance-Parameters
+      # - BsToPhi-Nonlocal
+      - BToKst-Local
+      # - BsToPhi-hatH
+    likelihood:
+      - Some-Constraint-For-Nuisances
+  - name: BToKst-Posterior-ic9m1
+    global_options:
+      form-factors: BSZ2015
+      tag: GvDV2020
+      nonlocal-formfactor: GRvDV2022order5
+      psi: J/psi
+      model: WET
+    fixed_parameters:
+      b->smumu::Im{c9}: -1.0
+    prior:
+      - Nuisance-Parameters
+      # - BsToPhi-Nonlocal
+      - BToKst-Local
+      # - BsToPhi-hatH
+    likelihood:
+      - Some-Constraint-For-Nuisances
+
+
+predictions:
+  - name: BToKst-Norm
+    observables: 
+      - name: 'B->K^*ll::Gamma(q2)'
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: 'B->K^*ll::Gamma'
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+
+  - name: BToKst-Si
+    observables:
+      - name: B->K^*ll::S_1c(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_1c@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_1s(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_1s@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_2c(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_2c@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_2s(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_2s@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_3(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_3@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_4(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_4@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_5(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_5@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_6s(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_6s@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_7(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_7@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_8(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_8@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_9(q2)@LHCb
+        kinematics: [ {q2: 0.5}, {q2: 1.0}, {q2: 1.5}, {q2: 2.0}, {q2: 2.5}, {q2: 3.0}, {q2: 3.5}, {q2: 4.0}, {q2: 4.5}, {q2: 5.0}, {q2: 5.5}, {q2: 6.0}, {q2: 6.5}, {q2: 7.0}, {q2: 7.5}, {q2: 8.0}, ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::S_9@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+
+  - name: BToKst-Opt
+    observables:
+      - name: B->K^*ll::P_1@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::P_2@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::P_3@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::P'_4@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::P'_5@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::P'_6@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d
+      - name: B->K^*ll::P'_8@LHCb
+        kinematics: [ {q2_min: 0.1, q2_max: 0.98}, {q2_min: 1.1, q2_max: 6.0}, {q2_min: 1.1, q2_max: 2.5}, {q2_min: 2.5, q2_max: 4.0}, {q2_min: 4.0, q2_max: 6.0}, {q2_min: 6.0, q2_max: 8.0} ] 
+        options: 
+          tag: GvDV2020
+          form-factors: BSZ2015
+          l: mu
+          q: d

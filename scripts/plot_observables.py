@@ -6,13 +6,17 @@ import numpy as np
 from numpy.typing import NDArray
 
 
-def load_eos(posterior_name: str) -> dict[str, NDArray | dict[tuple[float], tuple[float]]]:
+def load_eos(posterior_name: str, prefix: str = 'BsToPhi') -> dict[str, NDArray | dict[tuple[float], tuple[float]]]:
     result = {}
-    observable_groups = [f'BsToPhi-{obs}i' for obs in ['K', 'S', 'W', 'A', 'H', 'Z']] + ['BsToPhi-Norm'] + ['BsToPhi-Opt']
+    observable_groups = [f'{prefix}-{obs}i' for obs in ['K', 'S', 'W', 'A', 'H', 'Z']] + [f'{prefix}-Norm'] + [f'{prefix}-Opt']
     path = os.path.join('predictions-data/', posterior_name)
     for group in observable_groups:
         yaml_name = os.path.join(path, f'pred-{group}', 'description.yaml')
         samples_name = os.path.join(path, f'pred-{group}', 'samples.npy')
+        if not os.path.exists(yaml_name):
+            print(f'Warning: {yaml_name} does not exist, skipping...')
+            continue
+        print(f'Loading {yaml_name} and {samples_name}...')
         with open(yaml_name, 'r') as fr:
             desc = yaml.load(fr, Loader=yaml.FullLoader)['observables']
         samples = np.load(samples_name)
@@ -77,6 +81,54 @@ def main() -> None:
             continue
         if '<' in obs:
             continue
+        fig, ax = plt.subplots()
+        for scenario in colors:
+            try:
+                ax.plot(results[scenario]['qsq_array'], results[scenario][obs], label=labels[scenario], color=colors[scenario], linestyle=linestyles[scenario])
+                ax.fill_between(results[scenario]['qsq_array'], results[scenario][obs]-results[scenario][f's_{obs}'], 
+                                results[scenario][obs]+results[scenario][f's_{obs}'], 
+                                color=colors[scenario], alpha=0.25, linestyle=linestyles[scenario])
+            except Exception as err:
+                pass
+            try:
+                x, xerr, y, yerr = read_eos_obs(results[scenario][f'<{obs}>'])
+                norm = np.ones_like(y) if obs != 'Gamma' else xerr * 2
+                ax.errorbar(x, y/norm, xerr=xerr, yerr=yerr/norm, fmt=markers[scenario], color=colors[scenario], alpha=0.75)
+            except Exception as err:
+                print(f'Error plotting {obs}: {err}')
+                continue
+        ax.legend()
+        ax.set_xlabel(r'$q^2$ [GeV$^2/c^4$]')
+        ax.set_ylabel('$'+ obs[0] + '_{' + obs[1:] + '}$')
+        fig.savefig(f'plots/{obs}.pdf', bbox_inches='tight', transparent=True)
+        print(f'saved plots/{obs}.pdf')
+        plt.close(fig)
+    return 
+
+
+def main_kst() -> None:
+    mpl.rc_file('schmitse-rc.rc')
+
+    results = {}
+    posterior_names = [f'BToKst-Posterior{name}' for name in ['', '-rc9m1', '-ic9m1']]
+
+    results['SM'] = load_eos(posterior_names[0], prefix='BToKst')
+    results['ReC9m1'] = load_eos(posterior_names[1], prefix='BToKst')
+    results['ImC9m1'] = load_eos(posterior_names[2], prefix='BToKst')
+
+    observables = list(results['SM'].keys())
+    print(observables)
+
+    colors = {'SM': 'blue', 'ReC9m1': 'orange', 'ImC9m1': 'green'}
+    linestyles = {'SM': '-', 'ReC9m1': '--', 'ImC9m1': '-.'}
+    markers = {'SM': 'o', 'ReC9m1': '*', 'ImC9m1': 's'}
+    labels = {'SM': 'SM', 'ReC9m1': r'$\Delta\mathcal{R}\{C_9\} = -1$', 'ImC9m1': r'$\Delta\mathcal{I}\{C_9\} = -1$'}
+
+    for obs in observables:
+        if obs == 'qsq_array':
+            continue
+        if '<' in obs:
+            continue
         if obs.startswith('s_'):
             continue
         fig, ax = plt.subplots()
@@ -95,11 +147,12 @@ def main() -> None:
         ax.legend()
         ax.set_xlabel(r'$q^2$ [GeV$^2/c^4$]')
         ax.set_ylabel('$'+ obs[0] + '_{' + obs[1:] + '}$')
-        fig.savefig(f'plots/{obs}.pdf', bbox_inches='tight', transparent=True)
-        print(f'saved plots/{obs}.pdf')
+        fig.savefig(f'plots/kst_{obs}.pdf', bbox_inches='tight', transparent=True)
+        print(f'saved plots/kst_{obs}.pdf')
         plt.close(fig)
-    return 
+    return None
 
 
 if __name__ == "__main__":
+    main_kst()
     main()

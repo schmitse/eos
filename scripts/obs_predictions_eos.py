@@ -160,12 +160,12 @@ def main() -> None:
 
     analysis_file = 'phimumu_predictions.yaml'
     form_factor_files = {
-        'B_s->phi::BsToPhi-Nonlocal-FFs': 'BsToPhi-nonlocal-data.yaml', # - they actually dont exist? 
+        'B_s->phi::BsToPhi-Nonlocal-FFs': 'GRvDV2022/BsToPhi-nonlocal-data.yaml', # - they actually dont exist? 
     }
     form_factor_parameter_files = {
-        'B_s->phi::BsToPhi-Local-FFs': 'BsToPhi-local.yaml', 
+        'B_s->phi::BsToPhi-Local-FFs': 'GRvDV2022/BsToPhi-local.yaml', 
         # 'B_s->phi::BsToPhi-Local-FFs': 'BsToPhi-local-flavio.yaml',         
-        'B_s->phi::BsToPhi-hatH': 'BsToPhi-hatH.yaml', # had to modify the names a lot to make that work. 
+        'B_s->phi::BsToPhi-hatH': 'GRvDV2022/BsToPhi-hatH.yaml', # had to modify the names a lot to make that work. 
     }
     # form_factor_files = {'None': 'BsToPhi_FormFactors_LCSRs.yaml'}
     for _name, _file in form_factor_files.items():
@@ -177,6 +177,37 @@ def main() -> None:
     posterior_names = ['BsToPhi-Posterior', 'BsToPhi-Posterior-rc9m1', 'BsToPhi-Posterior-ic9m1']
     observable_names = ['BsToPhi-Norm', 'BsToPhi-Si', 'BsToPhi-Ai', 'BsToPhi-Ki', 'BsToPhi-Wi', 'BsToPhi-Hi', 'BsToPhi-Zi', 'BsToPhi-Opt']
     observable_names = ['BsToPhi-Opt']
+    for posterior_name in posterior_names:
+        eos.tasks.sample_prior(analysis_file, posterior_name, base_directory=EOS_BASE_DIRECTORY, N=100, seed=42)
+        for observable_name in observable_names:
+            eos.tasks.predict_observables(analysis_file, posterior_name, observable_name, base_directory=EOS_BASE_DIRECTORY)
+    return None
+
+
+def main_kst() -> None:
+
+    # adjust to your favourite flavio installation if you want to play with the form-factors. 
+    # flavio_ffs = '/Users/schmitse/Templates/flavio/flavio/physics/data/arXiv-1503-05534v2/Bsphi_LCSR-Lattice.json'
+    # load_flavio_ffs(flavio_ffs, 'BsToPhi-local.yaml', 'BsToPhi-local-flavio.yaml')
+    # convert_eos_ffs_to_flavio('BsToPhi-local.yaml', flavio_ffs, flavio_ffs.replace('arXiv-1503-05534v2', 'arXiv-2206-03797'))
+
+    analysis_file = 'kstmumu_predictions.yaml'
+    form_factor_files = {
+        'B->K^*::BToKst-Nonlocal-FFs': 'GRvDV2022/BToKstar-nonlocal-data.yaml', # - they actually dont exist? 
+    }
+    form_factor_parameter_files = {
+        'B->K^*::BToKst-Local-FFs': 'GRvDV2022/BToKstar-local.yaml', 
+        'B->K^*::BToKst-hatH': 'GRvDV2022/BToKstar-hatH.yaml',
+    }
+    # form_factor_files = {'None': 'BsToPhi_FormFactors_LCSRs.yaml'}
+    for _name, _file in form_factor_files.items():
+        insert_constraint(_file, constraint_name=_name)
+    for _name, _file in form_factor_parameter_files.items():
+        insert_parameters(_file, constraint_name=_name)
+    
+    EOS_BASE_DIRECTORY = './predictions-data/'
+    posterior_names = ['BToKst-Posterior', 'BToKst-Posterior-rc9m1', 'BToKst-Posterior-ic9m1']
+    observable_names = ['BToKst-Norm', 'BToKst-Si', 'BToKst-Opt']
     for posterior_name in posterior_names:
         eos.tasks.sample_prior(analysis_file, posterior_name, base_directory=EOS_BASE_DIRECTORY, N=100, seed=42)
         for observable_name in observable_names:
@@ -233,5 +264,6 @@ def insert_constraint(filename: str, constraint_name: str | None = None) -> None
 
 if __name__ == "__main__":
     main()
+    main_kst()
     # main_wcscan(-3, 3, 5, 'c9')
     # main_wcscan(-3, 3, 5, 'c10')
