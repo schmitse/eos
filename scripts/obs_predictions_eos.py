@@ -102,6 +102,55 @@ def load_flavio_ffs(fname: str, fname_eos: str, outname: str, overwrite: bool = 
     return None
 
 
+def main_wcscan(wc_min: float, wc_max: float, npts: int, coeff: str = 'c9') -> None:
+    """ 
+    The default Wilson coefficients are 4.2 and -4.3 iirc.  
+    """
+    val = {'Rec9': 4.2, 'Imc9': 0, 'Rec10': -4.3, 'Imc10': 0}
+    delta_wc = np.linspace(wc_min, wc_max, npts)
+
+    analysis_file = 'phimumu_predictions.yaml'
+    form_factor_files = {
+        'B_s->phi::BsToPhi-Nonlocal-FFs': 'BsToPhi-nonlocal-data.yaml', # - they actually dont exist? 
+    }
+    form_factor_parameter_files = {
+        'B_s->phi::BsToPhi-Local-FFs': 'BsToPhi-local.yaml', 
+        # 'B_s->phi::BsToPhi-Local-FFs': 'BsToPhi-local-flavio.yaml',         
+        'B_s->phi::BsToPhi-hatH': 'BsToPhi-hatH.yaml', # had to modify the names a lot to make that work. 
+    }
+    # form_factor_files = {'None': 'BsToPhi_FormFactors_LCSRs.yaml'}
+    for _name, _file in form_factor_files.items():
+        insert_constraint(_file, constraint_name=_name)
+    for _name, _file in form_factor_parameter_files.items():
+        insert_parameters(_file, constraint_name=_name)
+    
+    EOS_BASE_DIRECTORY = './predictions-data/'
+
+    with open(analysis_file, 'r') as fr:
+        new_analysis_file = yaml.load(fr, Loader=yaml.FullLoader)
+
+    posteriors = []
+    for re_wc, im_wc in itertools.product(delta_wc, delta_wc):
+        posterior_info = new_analysis_file['posteriors'][0].copy()
+        posterior_info['fixed_parameters'] = {
+            f'b->smumu::Re{{{coeff}}}': float(val[f'Re{coeff}'] - re_wc), f'b->smumu::Im{{{coeff}}}': float(val[f'Im{coeff}'] - im_wc)
+        }
+        posterior_info['name'] = f'BsToPhi-Posterior-{coeff}-Re{re_wc:.3f}_Im{im_wc:.3f}'
+        new_analysis_file['posteriors'].append(posterior_info)
+        posteriors.append(f'BsToPhi-Posterior-{coeff}-Re{re_wc:.3f}_Im{im_wc:.3f}')
+    tmp_yaml = 'phimumu_predictions_tmp.yaml'
+    with open(tmp_yaml, 'w') as fw:
+        yaml.dump(new_analysis_file, fw, Dumper=yaml.SafeDumper)
+
+    for posterior in posteriors:
+        if os.path.exists(EOS_BASE_DIRECTORY + '/' + posterior + '/pred-BsToPhi-All/samples.npy'):
+            continue
+        eos.tasks.sample_prior(tmp_yaml, posterior, base_directory=EOS_BASE_DIRECTORY, N=100, seed=42)
+        eos.tasks.predict_observables(tmp_yaml, posterior, 'BsToPhi-All', base_directory=EOS_BASE_DIRECTORY)
+
+    return None
+
+
 def main() -> None:
 
     # adjust to your favourite flavio installation if you want to play with the form-factors. 
@@ -126,7 +175,8 @@ def main() -> None:
     
     EOS_BASE_DIRECTORY = './predictions-data/'
     posterior_names = ['BsToPhi-Posterior', 'BsToPhi-Posterior-rc9m1', 'BsToPhi-Posterior-ic9m1']
-    observable_names = ['BsToPhi-Norm', 'BsToPhi-Si', 'BsToPhi-Ai', 'BsToPhi-Ki', 'BsToPhi-Wi', 'BsToPhi-Hi', 'BsToPhi-Zi']
+    observable_names = ['BsToPhi-Norm', 'BsToPhi-Si', 'BsToPhi-Ai', 'BsToPhi-Ki', 'BsToPhi-Wi', 'BsToPhi-Hi', 'BsToPhi-Zi', 'BsToPhi-Opt']
+    observable_names = ['BsToPhi-Opt']
     for posterior_name in posterior_names:
         eos.tasks.sample_prior(analysis_file, posterior_name, base_directory=EOS_BASE_DIRECTORY, N=100, seed=42)
         for observable_name in observable_names:
@@ -183,3 +233,5 @@ def insert_constraint(filename: str, constraint_name: str | None = None) -> None
 
 if __name__ == "__main__":
     main()
+    # main_wcscan(-3, 3, 5, 'c9')
+    # main_wcscan(-3, 3, 5, 'c10')
