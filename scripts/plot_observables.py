@@ -81,6 +81,8 @@ def main() -> None:
             continue
         if '<' in obs:
             continue
+        if obs.startswith('s_'):
+            continue
         fig, ax = plt.subplots()
         for scenario in colors:
             try:
@@ -104,6 +106,52 @@ def main() -> None:
         print(f'saved plots/{obs}.pdf')
         plt.close(fig)
     return 
+
+
+def main_bfw() -> None:
+    mpl.rc_file('schmitse-rc.rc')
+
+    results = {}
+    posterior_names = [f'BsToPhi-Posterior-BFW{name}' for name in ['', '-rc9m1', '-ic9m1']]
+
+    results['SM'] = load_eos(posterior_names[0])
+    results['ReC9m1'] = load_eos(posterior_names[1])
+    results['ImC9m1'] = load_eos(posterior_names[2])
+
+    observables = list(results['SM'].keys())
+
+    colors = {'SM': 'blue', 'ReC9m1': 'orange', 'ImC9m1': 'green'}
+    linestyles = {'SM': '-', 'ReC9m1': '--', 'ImC9m1': '-.'}
+    markers = {'SM': 'o', 'ReC9m1': '*', 'ImC9m1': 's'}
+    labels = {'SM': 'SM', 'ReC9m1': r'$\Delta\mathcal{R}\{C_9\} = -1$', 'ImC9m1': r'$\Delta\mathcal{I}\{C_9\} = -1$'}
+
+    for obs in observables:
+        if obs == 'qsq_array':
+            continue
+        if '<' in obs:
+            continue
+        if obs.startswith('s_'):
+            continue
+        fig, ax = plt.subplots()
+        for scenario in colors:
+            try:
+                ax.plot(results[scenario]['qsq_array'], results[scenario][obs], label=labels[scenario], color=colors[scenario], linestyle=linestyles[scenario])
+                ax.fill_between(results[scenario]['qsq_array'], results[scenario][obs]-results[scenario][f's_{obs}'], 
+                                results[scenario][obs]+results[scenario][f's_{obs}'], 
+                                color=colors[scenario], alpha=0.25, linestyle=linestyles[scenario])
+                x, xerr, y, yerr = read_eos_obs(results[scenario][f'<{obs}>'])
+                norm = np.ones_like(y) if obs != 'Gamma' else xerr * 2
+                ax.errorbar(x, y/norm, xerr=xerr, yerr=yerr/norm, fmt=markers[scenario], color=colors[scenario], alpha=0.75)
+            except Exception as err:
+                print(f'Error plotting {obs}: {err}')
+                continue
+        ax.legend()
+        ax.set_xlabel(r'$q^2$ [GeV$^2/c^4$]')
+        ax.set_ylabel('$'+ obs[0] + '_{' + obs[1:] + '}$')
+        fig.savefig(f'plots/{obs}_BFW.pdf', bbox_inches='tight', transparent=True)
+        print(f'saved plots/{obs}_BFW.pdf')
+        plt.close(fig)
+    return None
 
 
 def main_kst() -> None:
@@ -154,5 +202,6 @@ def main_kst() -> None:
 
 
 if __name__ == "__main__":
+    main_bfw()
     main_kst()
     main()
